@@ -39,16 +39,22 @@ public class MainActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.listplaceholder);
         
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy); 
-        // or .detectAll() for all detectable 
+        
+//        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+//        StrictMode.setThreadPolicy(policy);
+        
+        if (android.os.Build.VERSION.SDK_INT >= 9) { 
+        	StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().
+        					permitAll().build(); 
+        	StrictMode.setThreadPolicy(policy); }
+        	        	
         
         
         ArrayList<HashMap<String, String>> mylist = new ArrayList<HashMap<String, String>>();
         
       //Get the data (see above)
     	JSONObject json = 
-    	    JSONParser.getJSONfromURL("http://nicktravis.com/beertemp/get.php?format=json&num=3");
+    	    JSONParser.getJSONfromURL("http://nicktravis.com/beertemp/get.php?format=json&num=6");
     	 
     	    try{
     	    //Get the element that holds the earthquakes ( JSONArray )
@@ -61,7 +67,7 @@ public class MainActivity extends ListActivity {
     	            JSONObject e = temperatures.getJSONObject(i);
     	 
     	            map.put("lineListNumber",  String.valueOf(i+1));//bulleted points, basically
-    	            map.put("reading", "Temperature:" + e.getString("reading"));
+    	            map.put("reading", "Temp/Time = " + e.getString("reading")+"ºF at "+epochConvert(e.getString("timestamp")));
     	            //map.put("timestamp", "Epoch Time: " +  e.getString("timestamp"));
     	            mylist.add(map);
     	    }
@@ -81,7 +87,7 @@ public class MainActivity extends ListActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
            @SuppressWarnings("unchecked")
             HashMap<String, String> o = (HashMap<String, String>) lv.getItemAtPosition(position);
-        	Toast.makeText(MainActivity.this, "ID '" + o.get("id") + "' was clicked.", Toast.LENGTH_SHORT).show();        		 
+        	Toast.makeText(MainActivity.this, "ID '" + o.get("lineListNumber") + "' was clicked.", Toast.LENGTH_SHORT).show();        		 
         	}
         	});
 
@@ -96,10 +102,13 @@ public class MainActivity extends ListActivity {
         return true;
     }
     
-    public void getJSONValues(Temperature temp){
-    	ArrayList<HashMap<String, String>> mylist = new ArrayList<HashMap<String, String>>();
-    	 
-    
+    public String epochConvert(String epochTime){
+    	
+    	long date = Long.parseLong(epochTime);
+    	date *= 1000;
+    	String stringTime = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new java.util.Date(date));
+    	return(stringTime);
     }
+    
 }
 
