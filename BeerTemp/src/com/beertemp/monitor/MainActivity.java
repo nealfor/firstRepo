@@ -1,47 +1,90 @@
 package com.beertemp.monitor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import android.os.Bundle;
-import android.app.Activity;
-import android.view.Menu;
-import android.widget.TabHost;
-import android.widget.TabHost.TabSpec;
-import android.widget.TextView;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
-public class MainActivity extends Activity {
+import android.app.ListActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.StrictMode;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
+
+public class MainActivity extends ListActivity {
 	Temperature temp = new Temperature();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.listplaceholder);
         
-        TabHost tabHost=(TabHost)findViewById(R.id.tabhost);
-        tabHost.setup();
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy); 
+        // or .detectAll() for all detectable 
         
         
-        TabSpec spec1=tabHost.newTabSpec("Current");
-        spec1.setContent(R.id.currentTempTab);
-        spec1.setIndicator("Current Temp");
-                        
+        ArrayList<HashMap<String, String>> mylist = new ArrayList<HashMap<String, String>>();
+        
+      //Get the data (see above)
+    	JSONObject json = 
+    	    JSONParser.getJSONfromURL("http://nicktravis.com/beertemp/get.php?format=json&num=3");
+    	 
+    	    try{
+    	    //Get the element that holds the earthquakes ( JSONArray )
+    	    JSONArray temperatures = json.getJSONArray("posts");
+    	 
+    	            //Loop the Array
+    	        for(int i=0;i < temperatures.length();i++){                      
+    	 
+    	            HashMap<String, String> map = new HashMap<String, String>();
+    	            JSONObject e = temperatures.getJSONObject(i);
+    	 
+    	            map.put("lineListNumber",  String.valueOf(i+1));//bulleted points, basically
+    	            map.put("reading", "Temperature:" + e.getString("reading"));
+    	            //map.put("timestamp", "Epoch Time: " +  e.getString("timestamp"));
+    	            mylist.add(map);
+    	    }
+    	    }catch(JSONException e)        {
+    	         Log.e("log_tag", "Error parsing data "+e.toString());
+    	    }
+    	    
+        ListAdapter adapter = new SimpleAdapter(this, mylist , R.layout.main,
+        		                        new String[] { "lineListNumber", "reading" },
+        		                        new int[] { R.id.item_title, R.id.item_subtitle });
+        		 
+        setListAdapter(adapter);
+        		 
+        final ListView lv = getListView();
+        lv.setTextFilterEnabled(true);
+        lv.setOnItemClickListener(new OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+           @SuppressWarnings("unchecked")
+            HashMap<String, String> o = (HashMap<String, String>) lv.getItemAtPosition(position);
+        	Toast.makeText(MainActivity.this, "ID '" + o.get("id") + "' was clicked.", Toast.LENGTH_SHORT).show();        		 
+        	}
+        	});
 
-        TabSpec spec2=tabHost.newTabSpec("Temp Logs");
-        spec2.setIndicator("Temp Logs");
-        spec2.setContent(R.id.pastTempText);
-
-        
-        tabHost.addTab(spec1);
-        tabHost.addTab(spec2);
-        
-        TextView tempText = (TextView)findViewById(R.id.tempDisplay);
-        tempText.setText("XX.XºF");
-        
-        getXMLValues(temp);
-        
-        tempText.setText(Float.toString(temp.getTemp()));
         
         
         
@@ -53,37 +96,10 @@ public class MainActivity extends Activity {
         return true;
     }
     
-    void getXMLValues(Temperature temp){
-    	String URL = "http://nicktravis.com/beertemp/get.php?format=xml&num=1";
-		// XML node keys
-		String KEY_ITEM = "temperature"; // parent node
-		String KEY_TIME = "timestamp";
-		String KEY_TEMP = "reading";
-		String KEY_SENS = "sensorID";
-		 
-		XMLParser parser = new XMLParser();
-		String xml = parser.getXmlFromUrl(URL); // getting XML
-		Document doc = parser.getDomElement(xml); // getting DOM element
-		 
-		NodeList nl = doc.getElementsByTagName(KEY_ITEM);
-				 
-		// looping through all item nodes <item>
-		for (int i = 0; i < nl.getLength(); i++) {
-			Element e = (Element) nl.item(i);
-			String time = parser.getValue(e, KEY_TIME); // name child value
-		    String temperature = parser.getValue(e, KEY_TEMP); // cost child value
-		    String sensor = parser.getValue(e, KEY_SENS); // description child value
-		    
-		    //
-		    //TEMPORARILY FORCING JUST ONCE THROUGH
-		    //
-		    temp.setTemp(Float.parseFloat(temperature));
-		    temp.setTime(Integer.parseInt(time));
-		    temp.setSensorID(Short.parseShort(sensor));
-		    
-		    i = nl.getLength();//force just once through until 
-		}
-		
+    public void getJSONValues(Temperature temp){
+    	ArrayList<HashMap<String, String>> mylist = new ArrayList<HashMap<String, String>>();
+    	 
+    
     }
 }
 
