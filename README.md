@@ -1,7 +1,6 @@
 firstRepo
 =========
 
-I have no idea what i'm doing
+I almost have an idea of what i'm doing
 
-Attempting to read an XML (possibly JSON in the future) file from a remote server. 
-Nothing hard, just trying to figure out how to get it done.
+Reads from a JSON Array populated by a PHP & MYSQL server holding temperatures logged by a Raspberry Pi.
